@@ -38,7 +38,7 @@ import java.util.LinkedList;
  * @author Brian Merkey (brim@env.dtu.dk, bvm@northwestern.edu), Department of
  * Engineering Sciences and Applied Mathematics, Northwestern University (USA)
  */
-public class Multigrid
+public class Multigrid implements MultigridSolverBackend
 {
 	/**
 	 * A name assigned to this solver. Specified in the XML protocol file.
@@ -155,8 +155,9 @@ public class Multigrid
 
 	PHsolver pHsolver = new PHsolver();
 
+	@Override
 	public void init(Domain domain, EnvironmentContainer environment,
-					 AgentContainer agents, PDEWrapper manager,
+					 AgentContainer agents, ProcessDiffusion manager,
 					 int vCycles, int preSteps, int coarseSteps, int postSteps, boolean autoAdjust)
 	{
 		/* Get the computational domain that this solver is associated with. */

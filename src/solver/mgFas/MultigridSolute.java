@@ -847,9 +847,20 @@ public class MultigridSolute
 		else
 			return Double.valueOf(Math.min(i, j) - 1);
 	}
+
+	/**
+	 * \brief Returns 0.5/(h*h) for the grid at the given order (for GPU/native relax).
+	 */
+	public double getH2i(int order) {
+		int nI = _conc[order].getGridSizeI();
+		int nJ = _conc[order].getGridSizeJ();
+		int nK = _conc[order].getGridSizeK();
+		double h = _referenceSystemSide / referenceIndex(nI, nJ, nK);
+		return 0.5 / (h * h);
+	}
 	
 	/**
-	 * 
+	 *
 	 */
 	public void applyComputation()
 	{

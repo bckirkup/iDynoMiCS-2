@@ -25,6 +25,7 @@ import test.junit.oldTests.BoundaryTest;
 import test.junit.oldTests.ChemostatsTest;
 import test.junit.oldTests.CoordinateMapTest;
 import test.junit.oldTests.ExtraMathTest;
+import test.junit.oldTests.HelperTest;
 import test.junit.oldTests.IteratorForCyclicLineTests;
 import test.junit.oldTests.IteratorForCyclicSquaresTests;
 import test.junit.oldTests.LinearAlgebraTest;
@@ -45,6 +46,7 @@ import test.junit.oldTests.XMLableTest;
 				ChemostatsTest.class,
 				CoordinateMapTest.class,
 				ExtraMathTest.class,
+				HelperTest.class,
 				IteratorForCyclicLineTests.class,
 				IteratorForCyclicSquaresTests.class,
 				LinearAlgebraTest.class,

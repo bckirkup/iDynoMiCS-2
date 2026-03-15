@@ -35,7 +35,7 @@ Bas has implemented some additional methods (cyclic boundaries).
 
 # Collision detection *(surface package)*
 
-Distance methods are based on closest point algorithms from originally from:
+Distance methods are based on closest point algorithms originally from:
 Ericson, C. (2005). Real-time collision detection. Computer (Vol. 1).
 
 Implemented in Java for sphere-swept volume collisions by Tomas Storck: 

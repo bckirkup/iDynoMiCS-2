@@ -145,7 +145,7 @@ public class PDEmultigrid extends PDEsolver
 	}
 	
 	/**
-	 * Constructor for multigrid solver at user suplied settings
+	 * Constructor for multigrid solver at user supplied settings
 	 * @param cycles
 	 * @param pre
 	 * @param coarse

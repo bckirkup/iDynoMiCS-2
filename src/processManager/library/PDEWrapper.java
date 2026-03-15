@@ -32,6 +32,8 @@ import solver.PHsolver;
 import solver.PKstruct;
 import solver.mgFas.Domain;
 import solver.mgFas.Multigrid;
+import solver.mgFas.MultigridCudaBackend;
+import solver.mgFas.MultigridSolverBackend;
 import solver.mgFas.SolverGrid;
 import solver.mgFas.*;
 import utility.Helper;
@@ -40,6 +42,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import dataIO.Log.Tier;
 
 /**
  * \brief wraps and runs PDE solver
@@ -51,7 +55,18 @@ public class PDEWrapper extends ProcessDiffusion {
 
     public static String REL_TOLERANCE = AspectRef.solverRelTolerance;
 
-    private Multigrid multigrid;
+    /** Shared thread pool for concurrent pH/special-reaction calculations. */
+    private static volatile ExecutorService concurrentExecutor;
+
+    private static synchronized ExecutorService getConcurrentExecutor() {
+        if (concurrentExecutor == null) {
+            concurrentExecutor = Executors.newFixedThreadPool(
+                    Runtime.getRuntime().availableProcessors());
+        }
+        return concurrentExecutor;
+    }
+
+    private MultigridSolverBackend multigrid;
 
     public double absTol;
 
@@ -101,13 +116,21 @@ public class PDEWrapper extends ProcessDiffusion {
         }
 
         Domain domain = new Domain(environment.getShape(), this._environment);
-        this.multigrid = new Multigrid();
+        this.multigrid = createMultigridBackend();
         multigrid.init(domain, environment, agents, this,
                 vCycles, preSteps, coarseSteps, postSteps, autoVcycleAdjust);
 
         // TODO Let the user choose which ODEsolver to use.
+    }
 
-
+    /**
+     * Factory for the multigrid solver backend. Uses GPU when the native
+     * library is available; otherwise falls back to CPU. Set system property
+     * {@code idynomics.gpu.native.path} to the full path of the native library
+     * if it is not on {@code java.library.path}.
+     */
+    protected MultigridSolverBackend createMultigridBackend() {
+        return new MultigridCudaBackend();
     }
 
     public double fetchBulk(String solute) {
@@ -375,13 +398,13 @@ public class PDEWrapper extends ProcessDiffusion {
 
     protected void applySpecialReactionsConcurrent(MultigridSolute[] concGrid, MultigridSolute[] specialGrid, int resorder) {
         Collection<SpatialGrid> solutes = this._environment.getSolutes();
-        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ExecutorService executor = getConcurrentExecutor();
         Map<IntegerArray, Future<PKstruct[]>> positionFutureMap = new HashMap<>();
 
         for (IntegerArray position : concGrid[0].fetchCoords(resorder)) {
             PKstruct[] pkSolutes = createPKSolutes(concGrid, specialGrid, solutes, position, resorder);
             if (pkSolutes != null) {
-                Future<PKstruct[]> future = executorService.submit(() -> new PHsolver().solve(pkSolutes));
+                Future<PKstruct[]> future = executor.submit(() -> new PHsolver().solve(pkSolutes));
                 positionFutureMap.put(position, future);
             }
         }
@@ -390,11 +413,14 @@ public class PDEWrapper extends ProcessDiffusion {
             try {
                 PKstruct[] resultPkStructs = entry.getValue().get();
                 updateSpecialGrid(specialGrid, resultPkStructs, entry.getKey().get(), resorder);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace(); // Handle exceptions appropriately
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                Log.out(Tier.CRITICAL, "Concurrent pH calculation interrupted");
+                break;
+            } catch (ExecutionException e) {
+                Log.out(Tier.CRITICAL, "Concurrent pH calculation failed: " + e.getCause());
             }
         }
-        executorService.shutdown();
     }
 
     /* TODO reuse structs for efficiency */

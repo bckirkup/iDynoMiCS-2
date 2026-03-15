@@ -59,7 +59,7 @@ public class Global extends ParameterSet
 		if ( XmlHandler.hasAttribute(elem, XmlRef.configuration) )
 		{
 			Global.supplementary_property_files = 
-					Helper.concatinate(supplementary_property_files, 
+					Helper.concatenate(supplementary_property_files, 
 					XmlHandler.obtainAttribute( elem, XmlRef.configuration, 
 					XmlRef.simulation).split(",") );
 		}
@@ -95,7 +95,7 @@ public class Global extends ParameterSet
 	
 	public void updateSettings()
 	{
-		/* set any additionally suplied property files */
+		/* set any additionally supplied property files */
 		set( supplementary_property_files );
 		
 		/* if no Root location is set use the default out. */

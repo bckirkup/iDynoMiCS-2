@@ -436,7 +436,7 @@ public final class Helper
 		
 	}
 	
-	public static String[] concatinate(String[] in, String... extra)
+	public static String[] concatenate(String[] in, String... extra)
 	{
 		String[] out = new String[ in.length + extra.length ];
 		for ( int i = 0; i < in.length; i++)
